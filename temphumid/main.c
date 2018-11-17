@@ -26,7 +26,7 @@ const int pre_measure_delay = 100 / ms_delay;
 static int state = STATE_PRE_MEASURE;
 static int cnt;
 
-static int32_t temp_value, humid_value;
+static int32_t usb_val[2];
 
 static void dbg(int val)
 {
@@ -114,7 +114,7 @@ static int read_result()
 		temp_val *= 16500;
 		temp_val /= (16384 - 2);
 		temp_val -= 4000;
-		temp_value = temp_val;	// store to global - this is returned by USB
+		usb_val[0] = temp_val;	// store to global - this is returned by USB
 			
 		// temp val is now in degrees C*100
 		// convert to a scale between 0 and 50 and output
@@ -128,7 +128,7 @@ static int read_result()
 		int32_t humid_val = (int32_t)b1 + ((int32_t)(b0 & 0x3f) << 8);
 		humid_val *= 10000;
 		humid_val /= (16384 - 2);
-		humid_value = humid_val;  // store to global - this is returned by USB
+		usb_val[1] = humid_val;  // store to global - this is returned by USB
 			
 		// humid val is now in % * 100
 		humid_val *= 0x3ff;
