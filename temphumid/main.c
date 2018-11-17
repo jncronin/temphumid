@@ -108,40 +108,46 @@ static int read_result()
 	int status = b0 >> 6;
 	if(status == 0)
 	{
+		// Fresh data available
+		
 		int32_t temp_val = (((int32_t)b2) << 6) + (((int32_t)b3) >> 2);
-		temp_val *= 165;
+		temp_val *= 16500;
 		temp_val /= (16384 - 2);
-		temp_val -= 40;
+		temp_val -= 4000;
 		temp_value = temp_val;	// store to global - this is returned by USB
 			
-		// temp val is now in degrees C
+		// temp val is now in degrees C*100
 		// convert to a scale between 0 and 50 and output
 		if(temp_val < 0)
 		temp_val = 0;
-		if(temp_val > 50)
-		temp_val = 50;
+		if(temp_val > 5000)
+		temp_val = 5000;
 		temp_val *= 0x3ff;
-		temp_val /= 50;
+		temp_val /= 5000;
 			
 		int32_t humid_val = (int32_t)b1 + ((int32_t)(b0 & 0x3f) << 8);
-		humid_val *= 100;
+		humid_val *= 10000;
 		humid_val /= (16384 - 2);
 		humid_value = humid_val;  // store to global - this is returned by USB
 			
-		// humid val is now in %
+		// humid val is now in % * 100
 		humid_val *= 0x3ff;
-		humid_val /= 100;
-			
-		OCR1A = humid_val & 0x3ff;
+		humid_val /= 10000;
+		
+		// output
+		OCR1A = temp_val & 0x3ff;
+		OCR1B = humid_val & 0x3ff;
 			
 		return 0;
 	}
 	else if(status == 1)
 	{
+		// Stale data only - no need to update output
 		return 0;
 	}
 	else
 	{
+		// Device is in command mode
 		return -3;
 	}
 }
