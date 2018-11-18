@@ -1,5 +1,28 @@
 /*
+Copyright (c) 2018  John Cronin
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+/*
  * temphumid.c
+ *  Firmware for TempHumid USB/Analog out device
  *
  * Created: 09/11/2018 15:29:31
  * Author : jncro
@@ -9,6 +32,8 @@
 #include <util/delay.h>
 #include <util/twi.h>
 #include <avr/wdt.h>
+#include <avr/interrupt.h>
+#include <usbdrv.h>
 
 
 #define SLA (0x27 << 1)
@@ -19,7 +44,7 @@
 #define STATE_PRE_MEASURE	0
 #define STATE_PRE_READ		1
 
-#define ms_delay 5
+#define ms_delay 1
 const int pre_read_delay = 100 / ms_delay;
 const int pre_measure_delay = 100 / ms_delay;
 
@@ -53,6 +78,8 @@ static int request_measurement()
 		TWCR = (1 << TWINT) | (1 << TWEN);
 		return -1;
 	}
+	
+	usbPoll();
 
 	TWDR = SLA;
 	TWCR = (1 << TWINT) | (1 << TWEN);
@@ -62,6 +89,8 @@ static int request_measurement()
 		TWCR = (1 << TWINT) | (1 << TWEN);
 		return -2;
 	}
+	
+	usbPoll();
 			
 	TWCR = (1 << TWINT) | (1 << TWSTO) | (1 << TWEN);
 	return 0;
@@ -77,6 +106,8 @@ static int read_result()
 		TWCR = (1 << TWINT) | (1 << TWEN);
 		return -1;
 	}
+	
+	usbPoll();
 		
 	// Send address + read bit
 	TWDR = SLAR;
@@ -87,23 +118,31 @@ static int read_result()
 		TWCR = (1 << TWINT) | (1 << TWEN);
 		return -2;
 	}
+	
+	usbPoll();
 			
 	// Read 4 data bytes
 	TWCR = (1 << TWINT) | (1 << TWEA) | (1 << TWEN);
 	TWINT_WAIT;
+	usbPoll();
 	uint8_t b0 = TWDR;
 	TWCR = (1 << TWINT) | (1 << TWEA) | (1 << TWEN);
 	TWINT_WAIT;
+	usbPoll();
 	uint8_t b1 = TWDR;
 	TWCR = (1 << TWINT) | (1 << TWEA) | (1 << TWEN);
 	TWINT_WAIT;
+	usbPoll();
 	uint8_t b2 = TWDR;
 	TWCR = (1 << TWINT) | (1 << TWEN);
 	TWINT_WAIT;
+	usbPoll();
 	uint8_t b3 = TWDR;
 		
 	// Send stop
 	TWCR = (1 << TWINT) | (1 << TWSTO) | (1 << TWEN);
+
+	usbPoll();
 		
 	int status = b0 >> 6;
 	if(status == 0)
@@ -124,6 +163,8 @@ static int read_result()
 		temp_val = 5000;
 		temp_val *= 0x3ff;
 		temp_val /= 5000;
+		
+		usbPoll();
 			
 		int32_t humid_val = (int32_t)b1 + ((int32_t)(b0 & 0x3f) << 8);
 		humid_val *= 10000;
@@ -166,7 +207,7 @@ int main(int argc, char const *argv[])
 	
 	dbg(7);
 	//while(1);
-	_delay_ms(500);
+	//_delay_ms(500);
 	dbg(0);
 	
 	/* Set TWI baud rate to 100 kHz */
@@ -178,7 +219,7 @@ int main(int argc, char const *argv[])
 	PORTC = 0;
 	
 	// Wait for HIH to be ready
-	_delay_ms(60);
+	//_delay_ms(60);
 	
 	
 	/* Set both PWM outputs to fast PWM mode,
@@ -204,8 +245,28 @@ int main(int argc, char const *argv[])
 	
 	// cnt2 continuously increments to time the square wave output
 	int cnt2 = 0;
+	
+	// Initialize USB and fake a device disconnect/reconnect to ensure the
+	//  host gives us a valid USB ID
+	DDRD &= ~(1 << DDD2);
+	DDRD &= ~(1 << DDD3);
+	PORTD &= ~(1 << PORTD2);
+	PORTD &= ~(1 << PORTD3);
+	usbInit();
+	usbDeviceDisconnect();
+	_delay_ms(250);
+	usbDeviceConnect();
+	
+	sei();
+	
+#ifdef DEBUG
+	dbg(7);
+#endif
+	
 	while(1)
 	{
+		usbPoll();
+		
 		// check D4 input
 		if(PIND & (1 << PIND4))
 		{
@@ -219,11 +280,18 @@ int main(int argc, char const *argv[])
 						{
 							state = STATE_PRE_READ;
 							cnt = pre_read_delay;
+#ifdef DEBUG
+							dbg(1);
+#endif
 						}
 						else
 						{
 							state = STATE_PRE_MEASURE;
 							cnt = pre_measure_delay;
+							
+#ifdef DEBUG
+							dbg(4);
+#endif
 						}
 						break;
 						
@@ -231,6 +299,9 @@ int main(int argc, char const *argv[])
 						read_result();
 						state = STATE_PRE_MEASURE;
 						cnt = pre_read_delay;
+#ifdef DEBUG
+						dbg(2);
+#endif
 						break;	
 				}
 			}
@@ -250,4 +321,17 @@ int main(int argc, char const *argv[])
 		_delay_ms(ms_delay);
 	}
 	
+}
+
+// USB Custom device function only using the default endpoint
+usbMsgLen_t usbFunctionSetup(uchar data[8])
+{
+	dbg(7);
+	usbRequest_t *rq = (usbRequest_t *)data;
+	if(rq->bRequest == 1)
+	{
+		usbMsgPtr = (uchar*)&usb_val[0];
+		return 8;
+	}
+	return 0;
 }
