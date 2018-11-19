@@ -52,6 +52,7 @@ static int state = STATE_PRE_MEASURE;
 static int cnt;
 
 static int32_t usb_val[2];
+static int32_t temp_val, humid_val;
 
 static void dbg(int val)
 {
@@ -149,7 +150,7 @@ static int read_result()
 	{
 		// Fresh data available
 		
-		int32_t temp_val = (((int32_t)b2) << 6) + (((int32_t)b3) >> 2);
+		temp_val = (((int32_t)b2) << 6) + (((int32_t)b3) >> 2);
 		temp_val *= 16500;
 		temp_val /= (16384 - 2);
 		temp_val -= 4000;
@@ -166,7 +167,7 @@ static int read_result()
 		
 		usbPoll();
 			
-		int32_t humid_val = (int32_t)b1 + ((int32_t)(b0 & 0x3f) << 8);
+		humid_val = (int32_t)b1 + ((int32_t)(b0 & 0x3f) << 8);
 		humid_val *= 10000;
 		humid_val /= (16384 - 2);
 		usb_val[1] = humid_val;  // store to global - this is returned by USB
@@ -174,10 +175,6 @@ static int read_result()
 		// humid val is now in % * 100
 		humid_val *= 0x3ff;
 		humid_val /= 10000;
-		
-		// output
-		OCR1A = temp_val & 0x3ff;
-		OCR1B = humid_val & 0x3ff;
 			
 		return 0;
 	}
@@ -267,44 +264,48 @@ int main(int argc, char const *argv[])
 	{
 		usbPoll();
 		
+		/* State machine to handle I2C comms */
+		if(cnt-- == 0)
+		{
+			switch(state)
+			{
+				case STATE_PRE_MEASURE:
+				if(request_measurement() == 0)
+				{
+					state = STATE_PRE_READ;
+					cnt = pre_read_delay;
+#ifdef DEBUG
+					dbg(1);
+#endif
+				}
+				else
+				{
+					state = STATE_PRE_MEASURE;
+					cnt = pre_measure_delay;
+					
+#ifdef DEBUG
+					dbg(4);
+#endif
+				}
+				break;
+				
+				case STATE_PRE_READ:
+				read_result();
+				state = STATE_PRE_MEASURE;
+				cnt = pre_read_delay;
+#ifdef DEBUG
+				dbg(2);
+#endif
+				break;
+			}
+		}
+
 		// check D4 input
 		if(PIND & (1 << PIND4))
 		{
-			// D4 not pressed - run main loop
-			if(cnt-- == 0)
-			{
-				switch(state)
-				{
-					case STATE_PRE_MEASURE:
-						if(request_measurement() == 0)
-						{
-							state = STATE_PRE_READ;
-							cnt = pre_read_delay;
-#ifdef DEBUG
-							dbg(1);
-#endif
-						}
-						else
-						{
-							state = STATE_PRE_MEASURE;
-							cnt = pre_measure_delay;
-							
-#ifdef DEBUG
-							dbg(4);
-#endif
-						}
-						break;
-						
-					case STATE_PRE_READ:
-						read_result();
-						state = STATE_PRE_MEASURE;
-						cnt = pre_read_delay;
-#ifdef DEBUG
-						dbg(2);
-#endif
-						break;	
-				}
-			}
+			// D4 not pressed - output actual values
+			OCR1A = temp_val & 0x3ff;
+			OCR1B = humid_val & 0x3ff;
 		}
 		else if(cnt2 & 0x100)	// output square wave low part
 		{
