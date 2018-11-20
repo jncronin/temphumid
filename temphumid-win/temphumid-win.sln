@@ -5,22 +5,64 @@ VisualStudioVersion = 15.0.28010.2046
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "temphumid-win", "temphumid-win\temphumid-win.vcxproj", "{61F7DF40-2D25-4FA8-AB04-2D8AAD2D816F}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libtemphumid", "libtemphumid\libtemphumid.vcxproj", "{186BF762-4C6C-4398-8F89-3A0437F49292}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libtemphumid.net", "libtemphumid.net\libtemphumid.net.vcxproj", "{31E8F134-189E-44A3-BFD0-CA12B2D31816}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "temphumid-gui", "temphumid-gui\temphumid-gui.csproj", "{2B02AF84-FB55-4903-952C-F819198E7BC3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
 		Debug|x64 = Debug|x64
 		Debug|x86 = Debug|x86
+		Release|Any CPU = Release|Any CPU
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{61F7DF40-2D25-4FA8-AB04-2D8AAD2D816F}.Debug|Any CPU.ActiveCfg = Debug|Win32
 		{61F7DF40-2D25-4FA8-AB04-2D8AAD2D816F}.Debug|x64.ActiveCfg = Debug|x64
 		{61F7DF40-2D25-4FA8-AB04-2D8AAD2D816F}.Debug|x64.Build.0 = Debug|x64
 		{61F7DF40-2D25-4FA8-AB04-2D8AAD2D816F}.Debug|x86.ActiveCfg = Debug|Win32
 		{61F7DF40-2D25-4FA8-AB04-2D8AAD2D816F}.Debug|x86.Build.0 = Debug|Win32
+		{61F7DF40-2D25-4FA8-AB04-2D8AAD2D816F}.Release|Any CPU.ActiveCfg = Release|Win32
 		{61F7DF40-2D25-4FA8-AB04-2D8AAD2D816F}.Release|x64.ActiveCfg = Release|x64
 		{61F7DF40-2D25-4FA8-AB04-2D8AAD2D816F}.Release|x64.Build.0 = Release|x64
 		{61F7DF40-2D25-4FA8-AB04-2D8AAD2D816F}.Release|x86.ActiveCfg = Release|Win32
 		{61F7DF40-2D25-4FA8-AB04-2D8AAD2D816F}.Release|x86.Build.0 = Release|Win32
+		{186BF762-4C6C-4398-8F89-3A0437F49292}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{186BF762-4C6C-4398-8F89-3A0437F49292}.Debug|x64.ActiveCfg = Debug|x64
+		{186BF762-4C6C-4398-8F89-3A0437F49292}.Debug|x64.Build.0 = Debug|x64
+		{186BF762-4C6C-4398-8F89-3A0437F49292}.Debug|x86.ActiveCfg = Debug|Win32
+		{186BF762-4C6C-4398-8F89-3A0437F49292}.Debug|x86.Build.0 = Debug|Win32
+		{186BF762-4C6C-4398-8F89-3A0437F49292}.Release|Any CPU.ActiveCfg = Release|Win32
+		{186BF762-4C6C-4398-8F89-3A0437F49292}.Release|x64.ActiveCfg = Release|x64
+		{186BF762-4C6C-4398-8F89-3A0437F49292}.Release|x64.Build.0 = Release|x64
+		{186BF762-4C6C-4398-8F89-3A0437F49292}.Release|x86.ActiveCfg = Release|Win32
+		{186BF762-4C6C-4398-8F89-3A0437F49292}.Release|x86.Build.0 = Release|Win32
+		{31E8F134-189E-44A3-BFD0-CA12B2D31816}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{31E8F134-189E-44A3-BFD0-CA12B2D31816}.Debug|x64.ActiveCfg = Debug|x64
+		{31E8F134-189E-44A3-BFD0-CA12B2D31816}.Debug|x64.Build.0 = Debug|x64
+		{31E8F134-189E-44A3-BFD0-CA12B2D31816}.Debug|x86.ActiveCfg = Debug|Win32
+		{31E8F134-189E-44A3-BFD0-CA12B2D31816}.Debug|x86.Build.0 = Debug|Win32
+		{31E8F134-189E-44A3-BFD0-CA12B2D31816}.Release|Any CPU.ActiveCfg = Release|Win32
+		{31E8F134-189E-44A3-BFD0-CA12B2D31816}.Release|x64.ActiveCfg = Release|x64
+		{31E8F134-189E-44A3-BFD0-CA12B2D31816}.Release|x64.Build.0 = Release|x64
+		{31E8F134-189E-44A3-BFD0-CA12B2D31816}.Release|x86.ActiveCfg = Release|Win32
+		{31E8F134-189E-44A3-BFD0-CA12B2D31816}.Release|x86.Build.0 = Release|Win32
+		{2B02AF84-FB55-4903-952C-F819198E7BC3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2B02AF84-FB55-4903-952C-F819198E7BC3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2B02AF84-FB55-4903-952C-F819198E7BC3}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{2B02AF84-FB55-4903-952C-F819198E7BC3}.Debug|x64.Build.0 = Debug|Any CPU
+		{2B02AF84-FB55-4903-952C-F819198E7BC3}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{2B02AF84-FB55-4903-952C-F819198E7BC3}.Debug|x86.Build.0 = Debug|Any CPU
+		{2B02AF84-FB55-4903-952C-F819198E7BC3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2B02AF84-FB55-4903-952C-F819198E7BC3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2B02AF84-FB55-4903-952C-F819198E7BC3}.Release|x64.ActiveCfg = Release|Any CPU
+		{2B02AF84-FB55-4903-952C-F819198E7BC3}.Release|x64.Build.0 = Release|Any CPU
+		{2B02AF84-FB55-4903-952C-F819198E7BC3}.Release|x86.ActiveCfg = Release|Any CPU
+		{2B02AF84-FB55-4903-952C-F819198E7BC3}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
