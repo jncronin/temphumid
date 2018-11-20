@@ -54,6 +54,32 @@ static int cnt;
 static int32_t usb_val[2];
 static int32_t temp_val, humid_val;
 
+PROGMEM char const usbDescriptorHidReport[48] = {
+	0x06, 0x00, 0xff,              // USAGE_PAGE (Vendor Defined Page 1)
+	0x09, 0x01,                    //   USAGE (Vendor Usage 1)
+	0xa1, 0x00,                    // COLLECTION (Physical)
+	0x09, 0x01,                    //   USAGE (Vendor Usage 1)
+	0x85, 0x01,                    // REPORT_ID (1)
+	0x95, 0x01,                    // REPORT_COUNT (1)
+	0x75, 0x20,                    // REPORT_SIZE (32)
+	0x26, 0x74, 0x40,              // LOGICAL_MAXIMUM (16500)
+	0x16, 0x60, 0xf0,              // LOGICAL_MINIMUM (-4000)
+	0x35, 0xd8,                    // PHYSICAL_MINIMUM (-40)
+	0x46, 0xa5, 0x00,              // PHYSICAL_MAXIMUM (165)
+	0x81, 0x02,                    // INPUT (Data,Var,Abs)
+	0x09, 0x02,                    //   USAGE (Vendor Usage 2)
+	0x85, 0x02,                    // REPORT_ID (2)
+	0x95, 0x01,                    // REPORT_COUNT (1)
+	0x75, 0x20,                    // REPORT_SIZE (32)
+	0x15, 0x00,                    // LOGICAL_MINIMUM (0)
+	0x26, 0x10, 0x27,              // LOGICAL_MAXIMUM (10000)
+	0x35, 0x00,                    // PHYSICAL_MINIMUM (0)
+	0x45, 0x64,                    // PHYSICAL_MAXIMUM (100)
+	0x81, 0x02,                    //   INPUT (Data,Var,Abs)
+	0xc0                           // END_COLLECTION
+};
+
+
 static void dbg(int val)
 {
 	if(val & 1)
@@ -324,15 +350,52 @@ int main(int argc, char const *argv[])
 	
 }
 
+// HID report return
+uchar hidRpt[5];
+
+static uchar* makeReport(uchar id, int32_t val)
+{
+	dbg(7);
+	hidRpt[0] = id;
+	hidRpt[1] = (uchar)(val & 0xff);
+	hidRpt[2] = (uchar)((val >> 8) & 0xff);
+	hidRpt[3] = (uchar)((val > 16) & 0xff);
+	hidRpt[4] = (uchar)((val >> 24) & 0xff);
+	return hidRpt;
+}
+
 // USB Custom device function only using the default endpoint
 usbMsgLen_t usbFunctionSetup(uchar data[8])
 {
-	dbg(7);
 	usbRequest_t *rq = (usbRequest_t *)data;
-	if(rq->bRequest == 1)
+	uchar rqtype = rq->bmRequestType & USBRQ_TYPE_MASK;
+	
+	if(rqtype == USBRQ_TYPE_VENDOR)
 	{
-		usbMsgPtr = (uchar*)&usb_val[0];
-		return 8;
+		if(rq->bRequest == 1)
+		{
+			usbMsgPtr = (uchar*)&usb_val[0];
+			return 8;
+		}
+	}
+	else if(rqtype == USBRQ_TYPE_CLASS)
+	{
+		if(rq->bRequest == USBRQ_HID_GET_REPORT)
+		{
+			uchar rptid = rq->wValue.bytes[0];
+			if(rptid == 1)
+			{
+				dbg(7);
+				usbMsgPtr = (uchar*)&usb_val[0];
+				return 4;
+			}
+			else if(rptid == 2)
+			{
+				dbg(7);
+				usbMsgPtr = (uchar*)&usb_val[1];
+				return 4;
+			}
+		}
 	}
 	return 0;
 }

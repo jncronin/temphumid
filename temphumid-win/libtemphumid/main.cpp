@@ -51,7 +51,7 @@ size_t libth_get_devices(libth_dev **devs, size_t devs_len)
 		libusb_device_descriptor desc;
 		int ret = libusb_get_device_descriptor(list[i], &desc);
 
-		if (ret == 0 && desc.idVendor == 0x16c0 && desc.idProduct == 0x27d8)
+		if (ret == 0 && desc.idVendor == 0x16c0 && desc.idProduct == 0x27d9)
 		{
 			unsigned char snum[512];
 			libusb_device_handle *dev;
@@ -91,15 +91,19 @@ double libth_get_temperature(libth_dev *dev)
 	if (!dev || !dev->dev || !ctx)
 		return NAN;
 
-	int32_t vals[2];
+	int32_t val;
 
-	int ret = libusb_control_transfer(dev->dev, libusb_request_type::LIBUSB_REQUEST_TYPE_VENDOR |
-		libusb_endpoint_direction::LIBUSB_ENDPOINT_IN, 1, 0, 0,
-		(unsigned char *)&vals[0], 8, 0);
+	int ret = libusb_control_transfer(dev->dev, libusb_request_type::LIBUSB_REQUEST_TYPE_CLASS |
+		libusb_request_recipient::LIBUSB_RECIPIENT_INTERFACE |
+		libusb_endpoint_direction::LIBUSB_ENDPOINT_IN,
+		1, // HID_GET_REPORT
+		1 << 8 | 1, // HID_REPORT_TYPE_INPUT, Report 1
+		0,	// INTERFACE_NUMBER
+		(unsigned char *)&val, 4, 0);
 
-	if (ret == 8)
+	if (ret == 4)
 	{
-		return (double)vals[0] / 100.0;
+		return (double)val / 100.0;
 	}
 	else
 	{
@@ -112,15 +116,19 @@ double libth_get_humidity(libth_dev *dev)
 	if (!dev || !dev->dev || !ctx)
 		return NAN;
 
-	int32_t vals[2];
+	int32_t val;
 
-	int ret = libusb_control_transfer(dev->dev, libusb_request_type::LIBUSB_REQUEST_TYPE_VENDOR |
-		libusb_endpoint_direction::LIBUSB_ENDPOINT_IN, 1, 0, 0,
-		(unsigned char *)&vals[0], 8, 0);
+	int ret = libusb_control_transfer(dev->dev, libusb_request_type::LIBUSB_REQUEST_TYPE_CLASS |
+		libusb_request_recipient::LIBUSB_RECIPIENT_INTERFACE |
+		libusb_endpoint_direction::LIBUSB_ENDPOINT_IN,
+		1, // HID_GET_REPORT
+		1 << 8 | 2, // HID_REPORT_TYPE_INPUT, Report 2
+		0,	// INTERFACE_NUMBER
+		(unsigned char *)&val, 4, 0);
 
-	if (ret == 8)
+	if (ret == 4)
 	{
-		return (double)vals[1] / 100.0;
+		return (double)val / 100.0;
 	}
 	else
 	{
